@@ -1,0 +1,48 @@
+﻿@page "/vozila"
+@inject IVoziloService VoziloService
+@inject NavigationManager NavigationManager
+<PageTitle>Vozila</PageTitle>
+
+
+
+<h3>Vozila</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Vozna Linija</th>
+            <th>Tip</th>
+            <th>Naziv</th>
+            <th>Km</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+         @foreach (var vozilo in VoziloService.Vozila)
+        {
+            <tr>
+                <td>@vozilo.VoznaLinija</td>
+                <td>@vozilo.Tip</td>
+                <td>@vozilo.Naziv</td>
+                <td>@vozilo.Km</td>
+                <td>
+                    <button class="btn btn-primary" @onclick="(() => ShowVozilo(vozilo.Id))"><i class="oi oi-pencil"></i></button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<button class="btn btn-primary" @onclick="CreateVozilo">Kreiraj vozilo</button>
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await VoziloService.GetVozila();
+    }
+    void ShowVozilo(int Id)
+    {
+        NavigationManager.NavigateTo($"vozilo/{Id}");
+    }
+    void CreateVozilo()
+    {
+        NavigationManager.NavigateTo("/vozilo");
+    }
+}

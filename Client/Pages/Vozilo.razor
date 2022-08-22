@@ -1,0 +1,96 @@
+﻿@page "/vozilo"
+@page "/vozilo/{id:int}"
+@inject IVoziloService VoziloService
+
+@if (Id == null)
+{
+    <PageTitle>Kreiraj novo vozilo</PageTitle>
+    <h3>Kreiraj novo vozilo</h3>
+}
+else
+{
+    <PageTitle>Uredi @vozilo.Naziv</PageTitle>
+    <h3>Uredi @vozilo.Naziv</h3>
+}
+
+<EditForm Model="vozilo" OnSubmit="HandleSubmit">
+    <div>
+        <label for="voznalinija">Vozna Linija</label>
+        <InputText id="voznalinija" @bind-Value="vozilo.VoznaLinija" class="form-control"></InputText>
+    </div>
+    <div>
+        <label for="naziv">Naziv</label>
+        <InputText id="naziv" @bind-Value="vozilo.Naziv" class="form-control"></InputText>
+    </div>
+    <div>
+        <label for="km">Km</label>
+        <InputText id="km" @bind-Value="vozilo.Km" class="form-control"></InputText>
+    </div>
+    <div>
+        <label>Tip</label><br />
+        <InputSelect @bind-Value="vozilo.TipId" class="form-select">
+            @foreach (var tip in VoziloService.Tipovi)
+            {
+                <option value="@tip.Id">@tip.Naziv</option>
+            }
+        </InputSelect>
+    </div>
+    <br />
+    <button type="submit" class="btn btn-primary">@btnText</button>
+    <button type="button" class="btn btn-danger" @onclick="DeleteVozilo">Obriši</button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    [Parameter]
+    public string VoznaLinija { get; set; } = string.Empty;
+    [Parameter]
+    public string Naziv { get; set; } = string.Empty;
+    [Parameter]
+    public string Km { get; set; } = string.Empty;
+    [Parameter]
+    public Tip? Tip { get; set; }
+    [Parameter]
+    public int TipId { get; set; }
+
+    string btnText = string.Empty;
+
+    Vozilo vozilo = new Vozilo { Tip = new Tip() };
+
+    protected override async Task OnInitializedAsync()
+    {
+        btnText = Id == null ? "Spremi" : "Uredi";
+        await VoziloService.GetTipove();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id == null)
+        {
+            vozilo.Tip = VoziloService.Tipovi[0];
+            vozilo.TipId = vozilo.Tip.Id;
+        }
+        else
+        {
+            vozilo = await VoziloService.GetJednoVozilo(Id);
+        }
+    }
+
+    async Task HandleSubmit()
+    {
+        if (Id == null)
+        {
+            await VoziloService.CreateVozilo(vozilo);
+        }
+        else
+        {
+            await VoziloService.UpdateVozilo(vozilo);
+        }
+    }
+
+    async Task DeleteVozilo()
+    {
+        await VoziloService.DeleteVozilo(vozilo.Id);
+    }
+}

@@ -1,0 +1,49 @@
+﻿@page "/login"
+@using Projekt.Client.Autentifikacija;
+@using Projekt.Shared;
+@using System.Net
+@inject HttpClient httpClient
+@inject IJSRuntime js
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager navManager
+
+<div class="row">
+    <div class="col-lg-4 offset-lg-4 pt-4 pb-4 border">
+        <div class="mb-3 text-center">
+            <h3>LOGIN</h3>
+        </div>
+        <div class="mb-3">
+            <label>Korisničko ime</label>
+            <input @bind="loginRequest.KorisnickoIme" class="form-control" placeholder="Korisničko ime" />
+        </div>
+        <div class="mb-3">
+            <label>Lozinka</label>
+            <input @bind="loginRequest.Lozinka" type="password" class="form-control" placeholder="Lozinka" />
+        </div>
+        <div class="mb-3 d-grid gap-2">
+            <button @onclick="Authenticate" class="btn btn-primary">Login</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private LoginRequest loginRequest = new LoginRequest();
+
+    private async Task Authenticate()
+    {
+        var loginResponse = await httpClient.PostAsJsonAsync<LoginRequest>("/api/Account/Login", loginRequest);
+
+        if (loginResponse.IsSuccessStatusCode)
+        {
+            var sesijaKorisnika = await loginResponse.Content.ReadFromJsonAsync<SesijaKorisnika>();
+            var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+            await customAuthStateProvider.UpdateAuthenticationState(sesijaKorisnika);
+            navManager.NavigateTo("/", true);
+        }
+        else if (loginResponse.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            await js.InvokeVoidAsync("alert", "Invalid User Name or Password");
+            return;
+        }
+    }
+}
